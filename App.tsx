@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { INITIAL_DATA } from './constants.tsx';
-import { ServiceProvider, Recommendation } from './types.ts';
-import ChatInterface from './components/ChatInterface.tsx';
-import AdminPanel from './components/AdminPanel.tsx';
-import Assistant from './components/Assistant.tsx';
-import { fetchProviders } from './services/supabase.ts';
+import { INITIAL_DATA } from './constants';
+import { ServiceProvider, Recommendation } from './types';
+import ChatInterface from './components/ChatInterface';
+import AdminPanel from './components/AdminPanel';
+import Assistant from './components/Assistant';
+import { fetchProviders } from './services/supabase';
 
 const App: React.FC = () => {
   const [providers, setProviders] = useState<ServiceProvider[]>([]);

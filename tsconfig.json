@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "Node",
     "jsx": "react-jsx",
     "allowJs": true,
     "esModuleInterop": true,
@@ -10,7 +10,8 @@
     "strict": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "baseUrl": "."
+    "baseUrl": ".",
+    "noEmit": true
   },
   "include": ["**/*.ts", "**/*.tsx"]
 }
