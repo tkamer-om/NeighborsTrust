@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { searchWithAI } from '../services/gemini.ts';
-import { ServiceProvider } from '../types.ts';
+import { searchWithAI } from '../services/gemini';
+import { ServiceProvider } from '../types';
 
 interface AssistantProps {
   data: ServiceProvider[];
