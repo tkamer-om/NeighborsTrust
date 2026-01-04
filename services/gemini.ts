@@ -1,50 +1,21 @@
-import { GoogleGenAI, Type } from "@google/genai";
-import { ServiceProvider } from "../types.ts";
+// services/gemini.ts
+import { ServiceProvider } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+type SearchResult = { text: string; recommendedIds: string[] };
 
-const EXTRACTION_SCHEMA = {
-  type: Type.ARRAY,
-  items: {
-    type: Type.OBJECT,
-    properties: {
-      providerName: { type: Type.STRING },
-      category: { type: Type.STRING },
-      phone: { type: Type.STRING },
-      comment: { type: Type.STRING },
-      recommenderName: { type: Type.STRING },
-      contextDescription: { type: Type.STRING }
-    },
-    required: ["providerName", "phone"]
-  }
-};
-
-export const searchWithAI = async (query: string, currentData: ServiceProvider[]) => {
+export const searchWithAI = async (
+  query: string,
+  currentData: ServiceProvider[]
+): Promise<SearchResult> => {
   try {
-    const context = JSON.stringify(currentData.map(p => ({
-      id: p.id,
-      name: p.name,
-      category: p.category,
-      description: p.description
-    })));
-
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: `CONTEXT: ${context}\nQUERY: ${query}\nTask: Answer in friendly Hebrew and provide JSON with {text, recommendedIds}`,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            text: { type: Type.STRING },
-            recommendedIds: { type: Type.ARRAY, items: { type: Type.STRING } }
-          },
-          required: ["text", "recommendedIds"]
-        }
-      }
+    const res = await fetch("/api/gemini", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ action: "search", query, currentData }),
     });
 
-    return JSON.parse(response.text || '{"text": "לא הצלחתי לעבד את התשובה", "recommendedIds": []}');
+    if (!res.ok) throw new Error(await res.text());
+    return (await res.json()) as SearchResult;
   } catch (error) {
     console.error("AI Search Error:", error);
     return { text: "שגיאה בחיבור לבינה המלאכותית.", recommendedIds: [] };
@@ -53,15 +24,14 @@ export const searchWithAI = async (query: string, currentData: ServiceProvider[]
 
 export const magicParseRecommendation = async (text: string) => {
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: `Extract recommendations from: ${text}`,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: EXTRACTION_SCHEMA
-      }
+    const res = await fetch("/api/gemini", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ action: "parseText", text }),
     });
-    return JSON.parse(response.text || "[]");
+
+    if (!res.ok) throw new Error(await res.text());
+    return await res.json();
   } catch (error) {
     console.error("AI Parse Error:", error);
     return [];
@@ -70,26 +40,24 @@ export const magicParseRecommendation = async (text: string) => {
 
 export const parseWhatsAppImage = async (file: File) => {
   try {
-    const base64 = await new Promise<string>((resolve) => {
+    const base64 = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve((reader.result as string).split(',')[1]);
+      reader.onload = () => {
+        const s = reader.result as string;
+        resolve(s.split(",")[1]);
+      };
+      reader.onerror = () => reject(new Error("Failed to read file"));
       reader.readAsDataURL(file);
     });
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: {
-        parts: [
-          { inlineData: { mimeType: file.type, data: base64 } },
-          { text: "Extract service recommendations from this image." }
-        ]
-      },
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: EXTRACTION_SCHEMA
-      }
+    const res = await fetch("/api/gemini", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ action: "parseImage", base64, mimeType: file.type }),
     });
-    return JSON.parse(response.text || "[]");
+
+    if (!res.ok) throw new Error(await res.text());
+    return await res.json();
   } catch (error) {
     console.error("AI Image Parse Error:", error);
     return [];
