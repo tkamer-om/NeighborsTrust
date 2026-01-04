@@ -5,6 +5,9 @@
   "scripts": {
     "build": "esbuild index.tsx --bundle --outfile=bundle.js --format=esm --minify --external:react --external:react-dom --external:@google/genai --external:@supabase/supabase-js --platform=browser --loader:.tsx=tsx --loader:.ts=ts"
   },
+  "dependencies": {
+    "@google/genai": "^0.8.0"
+  },
   "devDependencies": {
     "esbuild": "^0.24.2"
   }
