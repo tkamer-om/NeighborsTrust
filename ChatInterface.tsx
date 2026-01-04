@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { searchWithAI } from '../services/gemini';
-import { ServiceProvider } from '../types';
-import ServiceCard from './ServiceCard';
+import { searchWithAI } from '../services/gemini.ts';
+import { ServiceProvider } from '../types.ts';
+import ServiceCard from './ServiceCard.tsx';
 
 interface Message {
   id: string;

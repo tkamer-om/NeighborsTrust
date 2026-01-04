@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { magicParseRecommendation } from '../services/gemini';
-import { upsertProvider } from '../services/supabase';
+import { magicParseRecommendation } from '../services/gemini.ts';
+import { upsertProvider } from '../services/supabase.ts';
 
 interface AdminPanelProps {
   onClose: () => void;
