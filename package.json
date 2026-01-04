@@ -1,11 +1,11 @@
 {
   "name": "neighbors-trust",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Neighborhood professional services directory",
   "scripts": {
     "build": "esbuild index.tsx --bundle --outfile=bundle.js --format=esm --minify --external:react --external:react-dom --external:@google/genai --external:@supabase/supabase-js"
   },
   "devDependencies": {
-    "esbuild": "^0.24.0"
+    "esbuild": "^0.24.2"
   }
 }

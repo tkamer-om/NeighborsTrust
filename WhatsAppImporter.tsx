@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { magicParseRecommendation as parseWhatsAppText, parseWhatsAppImage } from '../services/gemini.ts';
+import { magicParseRecommendation as parseWhatsAppText, parseWhatsAppImage } from '../services/gemini';
 
 interface WhatsAppImporterProps {
   onImport: (data: any[]) => void;

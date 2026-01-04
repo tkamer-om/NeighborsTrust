@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { ServiceCategory, ServiceProvider, Recommendation } from '../types.ts';
-import { CATEGORIES } from '../constants.tsx';
-import { magicParseRecommendation, parseWhatsAppImage } from '../services/gemini.ts';
+import { ServiceCategory, ServiceProvider, Recommendation } from '../types';
+import { CATEGORIES } from '../constants';
+import { magicParseRecommendation, parseWhatsAppImage } from '../services/gemini';
 
 interface AddServiceProviderModalProps {
   onClose: () => void;
