@@ -1,15 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
 import { ServiceProvider, Recommendation } from '../types.ts';
 
-// These should ideally be environment variables in Cloudflare dashboard
+// ה-URL של הפרויקט שלך ב-Supabase
 const SUPABASE_URL = 'https://lkjndtyqrtqribltkgek.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_HGhl37lpKU_8vomSWct-4A_gKnjnWxK';
+
+// ה-Anon Key התקין שסיפקת
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxram5kdHlxcnRxcmlibHRrZ2VrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxMDE5MTIsImV4cCI6MjA4MjY3NzkxMn0.9KlAYK4RAMAUVUSGPaC3fJ8d7Fz5l9XiAVCbscWljac'; 
 
 export const getSupabaseClient = () => {
-  // A valid Supabase key is a long JWT. If it starts with 'sb_', it's a placeholder.
-  const isInvalidKey = !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith('sb_') || SUPABASE_ANON_KEY.length < 50;
-  
-  if (!SUPABASE_URL || isInvalidKey) {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.includes('YOUR_ACTUAL')) {
+    console.warn("Supabase keys are not fully configured.");
     return null;
   }
   
@@ -23,9 +23,7 @@ export const getSupabaseClient = () => {
 
 export const fetchProviders = async (): Promise<ServiceProvider[]> => {
   const supabase = getSupabaseClient();
-  if (!supabase) {
-    return [];
-  }
+  if (!supabase) return [];
 
   try {
     const { data, error } = await supabase
@@ -33,14 +31,23 @@ export const fetchProviders = async (): Promise<ServiceProvider[]> => {
       .select(`
         *,
         recommendations (*)
-      `);
+      `)
+      .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Database query error:', error);
+      console.error('Database query error:', error.message);
       return [];
     }
 
-    return (data || []) as ServiceProvider[];
+    return (data || []).map(p => ({
+      ...p,
+      recommendations: (p.recommendations || []).map((r: any) => ({
+        id: r.id,
+        recommenderName: r.recommender_name,
+        comment: r.comment,
+        date: r.date
+      }))
+    })) as ServiceProvider[];
   } catch (err) {
     console.error('Connection failed:', err);
     return [];
@@ -49,9 +56,9 @@ export const fetchProviders = async (): Promise<ServiceProvider[]> => {
 
 export const upsertProvider = async (provider: Partial<ServiceProvider>, rec: Partial<Recommendation>) => {
   const supabase = getSupabaseClient();
-  if (!supabase) throw new Error("לא ניתן להתחבר למסד הנתונים כרגע.");
+  if (!supabase) throw new Error("לא ניתן להתחבר למסד הנתונים. ודא שהמפתח הוגדר כראוי.");
 
-  // Using name and phone as unique identifier to avoid duplicates
+  // 1. שמירה/עדכון של נותן השירות
   const { data: pData, error: pError } = await supabase
     .from('providers')
     .upsert({
@@ -63,8 +70,12 @@ export const upsertProvider = async (provider: Partial<ServiceProvider>, rec: Pa
     .select()
     .single();
 
-  if (pError || !pData) throw pError;
+  if (pError || !pData) {
+    console.error("Upsert provider error:", pError);
+    throw new Error(pError?.message || "שגיאה בשמירת נותן השירות");
+  }
 
+  // 2. שמירת ההמלצה המשויכת
   const { error: rError } = await supabase
     .from('recommendations')
     .insert({
@@ -74,7 +85,10 @@ export const upsertProvider = async (provider: Partial<ServiceProvider>, rec: Pa
       date: rec.date || new Date().toISOString().split('T')[0]
     });
 
-  if (rError) throw rError;
+  if (rError) {
+    console.error("Insert recommendation error:", rError);
+    throw new Error(rError.message);
+  }
   
   return pData;
 };
