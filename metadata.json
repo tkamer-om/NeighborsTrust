@@ -1,0 +1,8 @@
+
+{
+  "name": "NeighborsTrust",
+  "description": "A community-driven directory for professional services based on personal recommendations from your neighborhood circles.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
